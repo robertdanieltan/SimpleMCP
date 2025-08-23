@@ -95,7 +95,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-# .env - Keep this file for project configuration
+.env
 .venv
 env/
 venv/
