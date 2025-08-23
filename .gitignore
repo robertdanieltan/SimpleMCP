@@ -133,6 +133,16 @@ cython_debug/
 *_test_results.md
 mcp_consolidated_test_report.json
 
+# Summary and cleanup files
+*_SUMMARY.md
+*_summary.md
+CLEANUP_*.md
+GITHUB_DEPLOYMENT_*.md
+
+# Verification and intermediate scripts
+test_*_comprehensive_suite.py
+verify_*.py
+
 # Docker volumes and data
 postgres_data/
 pgadmin_data/

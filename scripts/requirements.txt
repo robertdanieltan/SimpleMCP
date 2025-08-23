@@ -1,0 +1,11 @@
+# Requirements for development and testing scripts
+# Install with: pip install -r scripts/requirements.txt
+
+# HTTP client for API testing
+requests>=2.31.0
+
+# PostgreSQL database driver for direct database testing
+psycopg2-binary>=2.9.7
+
+# Optional: For enhanced output formatting
+colorama>=0.4.6
