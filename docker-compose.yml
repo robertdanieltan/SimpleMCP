@@ -4,10 +4,33 @@ services:
   ai-agent:
     build: ./ai-agent-service
     ports:
-      - "8000:8000"
+      - "${AI_AGENT_PORT:-8000}:8000"
     environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # Unified LLM Provider Configuration (RECOMMENDED)
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.7}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-1000}
+      - LLM_TIMEOUT=${LLM_TIMEOUT:-30}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - LLM_ORGANIZATION=${LLM_ORGANIZATION}
+      - LLM_SAFETY_SETTINGS=${LLM_SAFETY_SETTINGS}
+      - LLM_KEEP_ALIVE=${LLM_KEEP_ALIVE}
+      - LLM_MAX_RETRIES=${LLM_MAX_RETRIES}
+      - LLM_NUM_PREDICT=${LLM_NUM_PREDICT}
+      - LLM_SIMULATE_DELAY=${LLM_SIMULATE_DELAY}
+      - LLM_FAILURE_RATE=${LLM_FAILURE_RATE}
+       # Session Configuration
+      - LLM_SESSION_TIMEOUT_HOURS=${LLM_SESSION_TIMEOUT_HOURS:-24}
+      - LLM_MAX_CONCURRENT_SESSIONS=${LLM_MAX_CONCURRENT_SESSIONS:-100}
+      # Service Configuration
       - MCP_SERVICE_URL=http://mcp-service:8001
+      - AI_AGENT_SERVICE_URL=http://ai-agent:8000
+      # Development Settings
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=${DEBUG:-true}
     depends_on:
       mcp-service:
         condition: service_healthy
@@ -24,7 +47,7 @@ services:
   mcp-service:
     build: ./mcp-service
     ports:
-      - "8001:8001"
+      - "${MCP_SERVICE_PORT:-8001}:8001"
     environment:
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
@@ -47,7 +70,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
@@ -70,7 +93,7 @@ services:
       - PGADMIN_CONFIG_SERVER_MODE=False
       - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
     ports:
-      - "8080:80"
+      - "${PGADMIN_PORT:-8080}:80"
     depends_on:
       postgres:
         condition: service_healthy

@@ -87,8 +87,9 @@ graph TB
    
    **Edit `.env` file with your credentials:**
    ```env
-   # Required: Get from https://makersuite.google.com/app/apikey
-   GEMINI_API_KEY=your_actual_gemini_api_key_here
+   # Required: Choose your LLM provider and set API key
+   LLM_PROVIDER=gemini                    # Options: gemini, openai, anthropic, ollama
+   LLM_API_KEY=your_actual_api_key_here   # Get from provider's website
    
    # Database credentials (change from defaults for security)
    POSTGRES_PASSWORD=your_secure_password_here
@@ -349,11 +350,54 @@ python scripts/test_database.py         # Test database operations
 
 ## 🔧 Configuration
 
-### Environment Variables (.env file)
+### LLM Provider Configuration (New Unified Approach) ⭐
+
+The project now supports a **unified configuration approach** that makes it easy to switch between different LLM providers:
+
+```bash
+# Choose your LLM provider
+LLM_PROVIDER=gemini          # Options: gemini, openai, anthropic, ollama
+
+# Generic configuration (works with any provider)
+LLM_API_KEY=your_api_key_here
+LLM_MODEL=gemini-pro         # Provider-specific model name
+LLM_TEMPERATURE=0.7
+LLM_MAX_TOKENS=1000
+```
+
+**Benefits:**
+- ✅ **Easy Provider Switching**: Change `LLM_PROVIDER` to switch between Gemini, OpenAI, Anthropic, or Ollama
+- ✅ **Simplified Configuration**: One set of variables regardless of provider
+- ✅ **Future-Proof**: Adding new providers doesn't require new environment variables
+- ✅ **Provider-Aware Responses**: All API responses include information about which provider was used
+
+**Supported Providers:**
+- **Gemini**: `LLM_PROVIDER=gemini` (Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey))
+- **OpenAI**: `LLM_PROVIDER=openai` (Get API key from [OpenAI Platform](https://platform.openai.com/api-keys))
+- **Anthropic**: `LLM_PROVIDER=anthropic` (Get API key from [Anthropic Console](https://console.anthropic.com/))
+- **Ollama**: `LLM_PROVIDER=ollama` (Local LLM, requires [Ollama](https://ollama.ai/) running)
+
+**📖 Comprehensive Documentation:**
+- **[Provider Configuration Guide](ai-agent-service/PROVIDER_CONFIGURATION_GUIDE.md)** - Complete setup instructions for all providers
+- **[Environment-Based Provider Selection](ai-agent-service/ENVIRONMENT_PROVIDER_SELECTION.md)** - Detailed guide on provider selection
+- **[Troubleshooting Guide](ai-agent-service/TROUBLESHOOTING_GUIDE.md)** - Solutions for common provider issues
+- **[API Documentation](ai-agent-service/API_DOCUMENTATION.md)** - Provider-aware API examples and responses
+- **[Configuration Migration Guide](ai-agent-service/CONFIGURATION_MIGRATION.md)** - Migration from legacy configurations
+
+**New API Endpoints for Provider Management:**
+- `/provider/info` - Current provider information and capabilities
+- `/provider/config/{provider_name}` - Configuration guides for specific providers
+- `/provider/comparison` - Compare features and capabilities across providers
+- `/provider/validate` - Validate your provider configuration
+- `/troubleshooting/{category}` - Get help with common issues
+
+### Core Environment Variables (.env file)
 
 | Variable | Description | Required | Example |
 |----------|-------------|----------|---------|
-| `GEMINI_API_KEY` | Google Gemini API key | **Yes** | `AIzaSyC...` |
+| `LLM_PROVIDER` | LLM provider selection | **Yes** | `gemini` |
+| `LLM_API_KEY` | Your LLM API key | **Yes** | `your_api_key_here` |
+| `LLM_MODEL` | Model name | No | `gemini-pro` |
 | `POSTGRES_USER` | Database username | No | `postgres` (default) |
 | `POSTGRES_PASSWORD` | Database password | **Yes** | `your_secure_password` |
 | `POSTGRES_DB` | Database name | No | `aiagent_mcp` (default) |
@@ -369,6 +413,10 @@ python scripts/test_database.py         # Test database operations
 |---------|------|-----|---------|
 | AI Agent Service | 8000 | http://localhost:8000 | FastAPI web interface and API |
 | AI Agent Docs | 8000 | http://localhost:8000/docs | Interactive API documentation |
+| Provider Info | 8000 | http://localhost:8000/provider/info | Current provider information |
+| Provider Config | 8000 | http://localhost:8000/provider/config/{provider} | Configuration guides |
+| Provider Comparison | 8000 | http://localhost:8000/provider/comparison | Compare providers |
+| Troubleshooting | 8000 | http://localhost:8000/troubleshooting/{category} | Get help with issues |
 | MCP Service | 8001 | http://localhost:8001 | FastMCP tools and endpoints |
 | PostgreSQL | 5432 | localhost:5432 | Database server (direct access) |
 | pgAdmin | 8080 | http://localhost:8080 | Database administration web UI |

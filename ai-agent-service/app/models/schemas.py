@@ -26,6 +26,7 @@ class AgentResponse(BaseModel):
     action_result: Optional[Dict[str, Any]] = Field(None, description="Results from executed actions")
     timestamp: str = Field(..., description="Response timestamp")
     error: Optional[str] = Field(None, description="Error message if applicable")
+    provider_info: Optional[Dict[str, Any]] = Field(None, description="Information about the LLM provider used for this response")
 
 
 class TaskRequest(BaseModel):
@@ -42,23 +43,77 @@ class TaskResponse(BaseModel):
     message: str = Field(..., description="Human-readable message")
     data: Optional[Any] = Field(None, description="Operation result data")
     error: Optional[str] = Field(None, description="Error message if applicable")
+    provider_info: Optional[Dict[str, Any]] = Field(None, description="Information about the LLM provider used for this operation")
+
+
+class ProviderHealthMetrics(BaseModel):
+    """Provider-specific health metrics"""
+    status: str = Field(..., pattern="^(healthy|unhealthy|degraded|unavailable)$", description="Provider health status")
+    provider_name: str = Field(..., description="Name of the LLM provider")
+    model: Optional[str] = Field(None, description="Current model being used")
+    available: bool = Field(..., description="Whether provider is available")
+    initialized: bool = Field(..., description="Whether provider is initialized")
+    response_time_ms: Optional[int] = Field(None, description="Last response time in milliseconds")
+    last_health_check: Optional[str] = Field(None, description="Timestamp of last health check")
+    error: Optional[str] = Field(None, description="Error message if unhealthy")
+    capabilities: Optional[Dict[str, Any]] = Field(None, description="Provider capabilities")
+
+
+class ServiceHealthStatus(BaseModel):
+    """Health status for dependent services"""
+    available: bool = Field(..., description="Whether service is available")
+    url: Optional[str] = Field(None, description="Service URL")
+    response_time_ms: Optional[int] = Field(None, description="Response time in milliseconds")
+    last_check: Optional[str] = Field(None, description="Last health check timestamp")
+    error: Optional[str] = Field(None, description="Error message if unavailable")
 
 
 class HealthResponse(BaseModel):
-    """Response model for health checks"""
-    status: str = Field(..., pattern="^(healthy|degraded|unhealthy)$", description="Service health status")
+    """Enhanced response model for health checks"""
+    status: str = Field(..., pattern="^(healthy|degraded|unhealthy)$", description="Overall service health status")
     service: str = Field(..., description="Service name")
     version: str = Field(..., description="Service version")
+    timestamp: str = Field(..., description="Health check timestamp")
     environment: Optional[Dict[str, Any]] = Field(None, description="Environment information")
-    timestamp: Optional[str] = Field(None, description="Health check timestamp")
+    selected_provider: Optional[ProviderHealthMetrics] = Field(None, description="Selected LLM provider health")
+    services: Optional[Dict[str, ServiceHealthStatus]] = Field(None, description="Dependent services health")
+    performance_metrics: Optional[Dict[str, Any]] = Field(None, description="Performance metrics")
+
+
+class ProviderCapabilitiesInfo(BaseModel):
+    """Provider capabilities information"""
+    max_tokens: int = Field(..., description="Maximum tokens supported")
+    supports_streaming: bool = Field(..., description="Whether streaming is supported")
+    supports_functions: bool = Field(..., description="Whether function calling is supported")
+    supported_languages: List[str] = Field(..., description="List of supported languages")
+    context_window: Optional[int] = Field(None, description="Context window size")
+    supports_images: bool = Field(False, description="Whether image processing is supported")
+    supports_audio: bool = Field(False, description="Whether audio processing is supported")
+    cost_per_token: Optional[float] = Field(None, description="Cost per token if available")
+    rate_limit_rpm: Optional[int] = Field(None, description="Rate limit requests per minute")
+    rate_limit_tpm: Optional[int] = Field(None, description="Rate limit tokens per minute")
+
+
+class ProviderStatusInfo(BaseModel):
+    """Current provider status information"""
+    provider_name: str = Field(..., description="Name of the current provider")
+    model: str = Field(..., description="Current model being used")
+    available: bool = Field(..., description="Whether provider is available")
+    initialized: bool = Field(..., description="Whether provider is initialized")
+    health_status: str = Field(..., description="Provider health status")
+    capabilities: ProviderCapabilitiesInfo = Field(..., description="Provider capabilities")
+    performance: Optional[Dict[str, Any]] = Field(None, description="Performance metrics")
 
 
 class AgentStatusResponse(BaseModel):
-    """Response model for agent status"""
+    """Enhanced response model for agent status"""
     agent_status: str = Field(..., description="Agent status")
     timestamp: str = Field(..., description="Status timestamp")
-    services: Dict[str, Any] = Field(..., description="Dependent services status")
+    current_provider: Optional[ProviderStatusInfo] = Field(None, description="Current LLM provider information")
+    services: Dict[str, ServiceHealthStatus] = Field(..., description="Dependent services status")
     capabilities: List[str] = Field(..., description="Agent capabilities")
+    configuration: Optional[Dict[str, Any]] = Field(None, description="Configuration summary")
+    performance_metrics: Optional[Dict[str, Any]] = Field(None, description="Performance metrics")
 
 
 class IntentAnalysis(BaseModel):
@@ -173,3 +228,54 @@ class ListProjectsRequest(BaseModel):
     status: Optional[str] = Field(None, description="Filter by status")
     limit: int = Field(100, description="Maximum number of results")
     offset: int = Field(0, description="Number of results to skip")
+
+
+class ProviderSelectionInfo(BaseModel):
+    """Information about provider selection and configuration"""
+    current_provider: str = Field(..., description="Currently selected LLM provider")
+    selection_method: str = Field(..., description="How the provider was selected (environment, default, fallback)")
+    available_providers: List[str] = Field(..., description="List of available and configured providers")
+    provider_capabilities: Dict[str, ProviderCapabilitiesInfo] = Field(..., description="Capabilities of each available provider")
+    configuration_source: str = Field(..., description="Configuration source (unified, legacy, mixed)")
+
+
+class ProviderConfigurationGuide(BaseModel):
+    """Guide for configuring LLM providers"""
+    provider_name: str = Field(..., description="Name of the provider")
+    required_variables: List[str] = Field(..., description="Required environment variables")
+    optional_variables: List[str] = Field(..., description="Optional environment variables")
+    example_configuration: Dict[str, str] = Field(..., description="Example configuration values")
+    setup_instructions: List[str] = Field(..., description="Step-by-step setup instructions")
+    troubleshooting_tips: List[str] = Field(..., description="Common issues and solutions")
+    api_key_source: str = Field(..., description="Where to obtain API keys")
+    supported_models: List[str] = Field(..., description="List of supported models")
+
+
+class ProviderComparisonInfo(BaseModel):
+    """Comparison information between providers"""
+    provider_name: str = Field(..., description="Provider name")
+    strengths: List[str] = Field(..., description="Provider strengths and use cases")
+    limitations: List[str] = Field(..., description="Provider limitations")
+    cost_info: Optional[str] = Field(None, description="Cost information if available")
+    performance_notes: Optional[str] = Field(None, description="Performance characteristics")
+    recommended_for: List[str] = Field(..., description="Recommended use cases")
+
+
+class ConfigurationValidationResult(BaseModel):
+    """Result of provider configuration validation"""
+    provider_name: str = Field(..., description="Provider being validated")
+    is_valid: bool = Field(..., description="Whether configuration is valid")
+    missing_variables: List[str] = Field(default_factory=list, description="Missing required variables")
+    invalid_variables: List[str] = Field(default_factory=list, description="Invalid variable values")
+    warnings: List[str] = Field(default_factory=list, description="Configuration warnings")
+    suggestions: List[str] = Field(default_factory=list, description="Improvement suggestions")
+
+
+class TroubleshootingInfo(BaseModel):
+    """Troubleshooting information for provider issues"""
+    issue_category: str = Field(..., description="Category of the issue")
+    symptoms: List[str] = Field(..., description="Common symptoms")
+    possible_causes: List[str] = Field(..., description="Possible causes")
+    solutions: List[str] = Field(..., description="Step-by-step solutions")
+    prevention_tips: List[str] = Field(..., description="Tips to prevent the issue")
+    related_documentation: List[str] = Field(default_factory=list, description="Links to related documentation")
